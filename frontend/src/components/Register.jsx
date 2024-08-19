@@ -21,7 +21,7 @@ function Register() {
     e.preventDefault();
     try {
       const response = await register(formData);
-      setMessage(response.message);
+      setMessage('Registration failed');
     } catch (error) {
       setMessage('Registration failed');
     }
