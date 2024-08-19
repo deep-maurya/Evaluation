@@ -4,6 +4,8 @@ const path = require("path");
 const morgan = require("morgan");
 const bcrypt = require("bcrypt");
 var jwt = require('jsonwebtoken');
+const cors = require("cors");
+const swaggerUi = require('swagger-ui-express');
 require("dotenv").config();
 const {
   validate,
@@ -17,11 +19,15 @@ const { cloudniary_upload } = require("./utils/cloudinary_uploader");
 const { Multer_upload } = require("./utils/multer_upload");
 const { eventRouter } = require("./router/eventRouter");
 const { Token_auth } = require("./Middleware/Token_auth");
-
+const { Role_Auth } = require("./Middleware/Role");
+const { openapiSpecification } = require("./config/Swagger");
+//console.log(openapiSpecification)
 const app = express();
 app.use(express.json());
 app.use(express.static("public"));
+app.use(cors());
 app.use('/event',eventRouter)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpecification));
 
 var accessLogStream = fs.createWriteStream(path.join(__dirname, "access.log"), {
   flags: "a",
@@ -32,6 +38,28 @@ app.get("/", async(req, res) => {
   const users = await userModel.find({},{password:0,_id:0,__v:0});
   res.json(users);
 });
+
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: get all users availble
+ *     description: all USers
+ *     responses:
+ *       200:
+ *         description: A list of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ */
 
 app.post("/register", Multer_upload.single("image"), async (req, res) => {
   let status = 0;
@@ -67,7 +95,43 @@ app.post("/register", Multer_upload.single("image"), async (req, res) => {
   }
   res.json({ status: status, message: message, data: return_data });
 });
-
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     summary: Register a new user
+ *     description: Register a new user by their name, email, password, profile photo.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Registration response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ */
 
 app.post('/login',async(req,res)=>{
   let status = 0;
@@ -91,9 +155,41 @@ app.post('/login',async(req,res)=>{
   }
   res.json({ status: status, message: message, data: return_data });
 })
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: User login
+ *     description: Authenticates a user with email and password.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ */
 
 
-app.patch("/update", Token_auth, async (req, res) => {
+app.patch("/update", Token_auth, Role_Auth(['user','Admin']), async (req, res) => {
   let status = 0;
   let message = "All fields (id, name, email) are required";
   let return_data = [];
@@ -121,6 +217,38 @@ app.patch("/update", Token_auth, async (req, res) => {
 
   res.json({ status: status, message: message, data: return_data });
 });
+/**
+ * @swagger
+ * /update:
+ *   patch:
+ *     summary: Update user details
+ *     description: Update a user's name and email. Requires authentication.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Update response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ */
 
 
 app.delete("/delete", Token_auth, async (req, res) => {
@@ -141,7 +269,27 @@ app.delete("/delete", Token_auth, async (req, res) => {
   }
   res.json({ status: status, message: message, data: return_data });
 });
-
+/**
+ * @swagger
+ * /delete:
+ *   delete:
+ *     summary: Delete user account
+ *     description: Deletes the authenticated user's account.
+ *     responses:
+ *       200:
+ *         description: Deletion response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ */
 
 
 app.listen(process.env.PORT, () => {

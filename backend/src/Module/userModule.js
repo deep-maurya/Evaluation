@@ -1,5 +1,4 @@
 const { Schema, model } = require("mongoose");
-
 const userSchema = new Schema({
     id:{
         type:Number,
@@ -22,6 +21,10 @@ const userSchema = new Schema({
     profile_image:{
         type:String,
         require:true
+    },
+    role:{
+        type:String,
+        default:"user"
     }
 })
 

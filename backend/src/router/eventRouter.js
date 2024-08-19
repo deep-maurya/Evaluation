@@ -2,6 +2,7 @@ const { Router } = require("express");
 const { eventAttendModel, eventModel } = require("../Module/eventModule");
 var jwt = require("jsonwebtoken");
 const { Token_auth } = require("../Middleware/Token_auth");
+const { Role_Auth } = require("../Middleware/Role");
 require("dotenv").config();
 const eventRouter = Router();
 
@@ -11,14 +12,40 @@ eventRouter.get("/", async (req, res) => {
   // console.log("working")
 });
 
-eventRouter.post("/create", Token_auth, async (req, res) => {
+/**
+ * @swagger
+ * /users:
+ *   post:
+ *     summary: Create a new user
+ *     description: Create a new user with the given details.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/User'
+ *           example:
+ *             name: "John Doe"
+ *             email: "johndoe@example.com"
+ *     responses:
+ *       201:
+ *         description: User created successfully.
+ *         content:
+ *           application/json:
+ *             example:
+ *               id: "123"
+ *               name: "John Doe"
+ *               email: "johndoe@example.com"
+ */
+
+eventRouter.post("/create", Token_auth, Role_Auth(['user']), async (req, res) => {
   let status = 0;
   let message = "All fields Are required eventName,eventDate,token";
   let return_data = [];
   const { eventName, eventDate } = req.body;
   if (eventName && eventDate && eventName != "" && eventDate != "") {
     try {
-      message = "authorized";
+      message = "Event Created Successfully";
       const new_event = {
         eventId: parseInt(Math.random() * 10000000),
         eventName,
@@ -34,7 +61,7 @@ eventRouter.post("/create", Token_auth, async (req, res) => {
   res.json({ status: status, message: message, data: return_data });
 });
 
-eventRouter.post("/delete", Token_auth, async (req, res) => {
+eventRouter.post("/delete", Token_auth, Role_Auth(['user','admin']), async (req, res) => {
   let status = 0;
   let message = "All fields Are required eventID";
   let return_data = [];
