@@ -11,32 +11,34 @@ eventRouter.get("/", async (req, res) => {
   res.json({ ...all_events });
   // console.log("working")
 });
-
 /**
  * @swagger
- * /users:
- *   post:
- *     summary: Create a new user
- *     description: Create a new user with the given details.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/User'
- *           example:
- *             name: "John Doe"
- *             email: "johndoe@example.com"
+ * /event/:
+ *   get:
+ *     summary: Retrieve all events
+ *     description: Fetch a list of all events from the database.
+ *     tags:
+ *       - Events
  *     responses:
- *       201:
- *         description: User created successfully.
+ *       200:
+ *         description: A list of events
  *         content:
  *           application/json:
- *             example:
- *               id: "123"
- *               name: "John Doe"
- *               email: "johndoe@example.com"
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   eventId:
+ *                     type: integer
+ *                   eventName:
+ *                     type: string
+ *                   eventDate:
+ *                     type: string
+ *                   eventOwner:
+ *                     type: string
  */
+
 
 eventRouter.post("/create", Token_auth, Role_Auth(['user']), async (req, res) => {
   let status = 0;
@@ -60,8 +62,45 @@ eventRouter.post("/create", Token_auth, Role_Auth(['user']), async (req, res) =>
   }
   res.json({ status: status, message: message, data: return_data });
 });
+/**
+ * @swagger
+ * /event/create:
+ *   post:
+ *     summary: Create a new event
+ *     description: Creates a new event with the provided details.
+ *     tags:
+ *       - Events
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               eventName:
+ *                 type: string
+ *               eventDate:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       200:
+ *         description: Event created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ */
 
-eventRouter.post("/delete", Token_auth, Role_Auth(['user','admin']), async (req, res) => {
+eventRouter.post("/delete", Token_auth, async (req, res) => {
   let status = 0;
   let message = "All fields Are required eventID";
   let return_data = [];
@@ -85,6 +124,98 @@ eventRouter.post("/delete", Token_auth, Role_Auth(['user','admin']), async (req,
   }
   res.json({ status: status, message: message, data: return_data });
 });
+/**
+ * @swagger
+ * /event/delete:
+ *   post:
+ *     summary: Delete an event
+ *     description: Deletes an event by ID, and requires the user to be the owner of the event.
+ *     tags:
+ *       - Events
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               eventId:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Event deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ */
+
+eventRouter.post("/delete_by_admin", Token_auth, Role_Auth(['admin']), async (req, res) => {
+  let status = 0;
+  let message = "All fields Are required eventID";
+  let return_data = [];
+  const { eventId } = req.body;
+  if (eventId && eventId != "") {
+    console.log(eventId);
+    try {
+      message =
+        "Wrong event ID or Maybe you are not authorized to delete this event";
+      const check = await eventModel.findOneAndDelete({
+        eventId: eventId
+      });
+      if (check != null) {
+        status = 1;
+        message = "Event Deleted";
+      }
+    } catch (error) {
+      message = "Unauthorized token";
+    }
+  }
+  res.json({ status: status, message: message, data: return_data });
+});
+/**
+ * @swagger
+ * /event/delete_by_admin:
+ *   post:
+ *     summary: Admin delete an event
+ *     description: Deletes an event by ID with admin privileges.
+ *     tags:
+ *       - Events
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               eventId:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Event deleted successfully by admin
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ */
 
 eventRouter.post("/register", Token_auth, async (req, res) => {
   let status = 0;
@@ -117,5 +248,39 @@ eventRouter.post("/register", Token_auth, async (req, res) => {
   }
   res.json({ status: status, message: message, data: return_data });
 });
+/**
+ * @swagger
+ * /event/register:
+ *   post:
+ *     summary: Register for an event
+ *     description: Allows a user to register for an event using the event ID.
+ *     tags:
+ *       - Events
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               eventId:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Successfully registered for the event
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ */
 
 module.exports = { eventRouter };

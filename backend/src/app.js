@@ -45,6 +45,8 @@ app.get("/", async(req, res) => {
  *   get:
  *     summary: get all users availble
  *     description: all USers
+ *     tags:
+ *       - Users
  *     responses:
  *       200:
  *         description: A list of users
@@ -101,6 +103,8 @@ app.post("/register", Multer_upload.single("image"), async (req, res) => {
  *   post:
  *     summary: Register a new user
  *     description: Register a new user by their name, email, password, profile photo.
+ *     tags:
+ *       - Users
  *     requestBody:
  *       required: true
  *       content:
@@ -161,6 +165,8 @@ app.post('/login',async(req,res)=>{
  *   post:
  *     summary: User login
  *     description: Authenticates a user with email and password.
+ *     tags:
+ *       - Users
  *     requestBody:
  *       required: true
  *       content:
@@ -223,6 +229,8 @@ app.patch("/update", Token_auth, Role_Auth(['user','Admin']), async (req, res) =
  *   patch:
  *     summary: Update user details
  *     description: Update a user's name and email. Requires authentication.
+ *     tags:
+ *       - Users
  *     requestBody:
  *       required: true
  *       content:
@@ -275,6 +283,8 @@ app.delete("/delete", Token_auth, async (req, res) => {
  *   delete:
  *     summary: Delete user account
  *     description: Deletes the authenticated user's account.
+ *     tags:
+ *       - Users
  *     responses:
  *       200:
  *         description: Deletion response

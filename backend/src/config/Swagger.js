@@ -9,16 +9,14 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:9090', // URL of your development server
-        description: 'Development server'
+        url: 'https://evaluation-1-1q6d.onrender.com/'
       },
       {
-        url: 'https://api.example.com', // URL of your production server
-        description: 'Production server'
+        url: 'http://localhost:9090'
       }
     ],
   },
-  apis: ['./src/*.js'], // files containing annotations as above
+  apis: ['./src/*.js','./src/router/*.js'], // files containing annotations as above
 };
 
 const openapiSpecification = swaggerJsdoc(options);
